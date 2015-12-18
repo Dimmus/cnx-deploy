@@ -429,13 +429,13 @@ sub vcl_backend_response {
 }
 
 sub vcl_backend_error {
-    if (obj.status == 750) {
-        set obj.http.Location = "http://" + regsub(req.http.host,"^[^:]*","cnx.org") + req.url;
-        set obj.status = 301;
+    if (beresp.status == 750) {
+        set beresp.http.Location = "http://" + regsub(req.http.host,"^[^:]*","cnx.org") + req.url;
+        set beresp.status = 301;
         return(deliver);
-    } elsif (obj.status == 700) {
-        set obj.http.Location = req.http.host + regsub(req.url,"//$","/");
-        set obj.status = 301;
+    } elsif (beresp.status == 700) {
+        set beresp.http.Location = req.http.host + regsub(req.url,"//$","/");
+        set beresp.status = 301;
         return(deliver);
     }
 }
