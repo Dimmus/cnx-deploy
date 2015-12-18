@@ -91,15 +91,15 @@ import std;
 
 sub vcl_recv {
     if (req.url == "/join_form") {
-        error 403 "Access denied";
+        return (synth(403, "Access denied"));
     }
 
     if (req.method == "POST" && req.url ~ "^/content/[mc]" && req.url !~ "(reuse_edit|(favorites|lens)_add)_inner" && req.url !~ "@@reuse-edit-view" && req.url !~ "lensAdd" && req.url !~ "setPrintedFile" && req.url !~ "updateParameters" && req.url !~ "manage_addProperty" && req.http.referer !~ "manage_propertiesForm") {
-        error 403 "Access denied (POST)";
+        return (synth(403, "Access denied (POST)"));
     }
 
     if (client.ip ~ block) {
-        error 403 "Access denied";
+        return (synth(403, "Access denied"));
     }
 
     # cnx rewrite archive
@@ -137,12 +137,12 @@ sub vcl_recv {
         if (req.http.user-agent ~ "Baiduspider" 
             || req.http.user-agent ~ "ScoutJet"
             || req.http.user-agent ~ "bingbot") {
-            error 403 "Access denied";
+            return (synth(403, "Access denied"));
         }
     }
 
     if (req.http.user-agent ~ "equella|360Spider") {
-        error 403 "Access denied";
+        return (synth(403, "Access denied"));
     }
 
     set req.grace = 120s;
@@ -248,26 +248,26 @@ sub vcl_recv {
         }
         set req.backend = backend_0;
     }
-    else     {
-	    error 750 "Moved Permanently" ;
+    else {
+        return (synth(750, "Moved Permanently"));
     }
     
     if (req.method == "PURGE") {
         if (!client.ip ~ purge) {
-            error 405 client.ip;
+            return (synth(405, client.ip));
         }
         set req.url = req.url + "$";
         ban_url(req.url);
         std.log("purge url: " + req.url);
-        error 200 "Purged";
+        return (synth(200, "Purged"));
     }
    if (req.method == "PURGE_REGEXP") {
         if (!client.ip ~ purge) {
-                error 405 "Not allowed.";
+            return (synth(405, "Not allowed."));
         }
         ban_url(req.url);
         std.log("purge regexp: " + req.url);
-        error 200 "Purged";
+        return (synth(200, "Purged"));
     }
 
     if (req.method != "GET" && req.method != "HEAD") {
@@ -284,7 +284,7 @@ sub vcl_recv {
     }
 
     if (req.url ~ "//$") {
-        error 700 "Bad URL";
+        return (synth(700, "Bad URL"));
     }
 
     call normalize_accept_encoding;
@@ -303,7 +303,7 @@ sub vcl_hit {
     }
     if (req.method == "PURGE") {
         set obj.ttl = 0s;
-        error 200 "Purged";
+        return (synth(200, "Purged"));
     }
     if (req.http.X-Force-Refresh == "refresh") {
         # Allow client refresh via magic header
@@ -321,7 +321,7 @@ sub vcl_hit {
 
 sub vcl_miss {
     if (req.method == "PURGE") {
-        error 404 "Not in cache";
+        return (synth(404, "Not in cache"));
     }
 
 }
