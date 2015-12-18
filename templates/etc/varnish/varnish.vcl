@@ -1,3 +1,5 @@
+vcl 4.0;
+
 # This is a basic VCL configuration file for varnish.  See the vcl(7)
 # man page for details on VCL syntax and semantics.
 C{
@@ -92,7 +94,7 @@ sub vcl_recv {
         error 403 "Access denied";
     }
 
-    if (req.request == "POST" && req.url ~ "^/content/[mc]" && req.url !~ "(reuse_edit|(favorites|lens)_add)_inner" && req.url !~ "@@reuse-edit-view" && req.url !~ "lensAdd" && req.url !~ "setPrintedFile" && req.url !~ "updateParameters" && req.url !~ "manage_addProperty" && req.http.referer !~ "manage_propertiesForm") {
+    if (req.method == "POST" && req.url ~ "^/content/[mc]" && req.url !~ "(reuse_edit|(favorites|lens)_add)_inner" && req.url !~ "@@reuse-edit-view" && req.url !~ "lensAdd" && req.url !~ "setPrintedFile" && req.url !~ "updateParameters" && req.url !~ "manage_addProperty" && req.http.referer !~ "manage_propertiesForm") {
         error 403 "Access denied (POST)";
     }
 
@@ -108,7 +110,7 @@ sub vcl_recv {
 
     # cnx rewrite archive  - specials served from nginx statically
     if (req.http.host ~ "^{{ arclishing_domain }}" || req.url ~ "^/sitemap.xml") {
-        if ( req.request == "POST" || req.request == "PUT" || req.request == "DELETE" || req.url ~ "^/(publications|callback|a|login|logout|moderations|feeds/moderations.rss|contents/.*/(licensors|roles|permissions))") {
+        if ( req.method == "POST" || req.method == "PUT" || req.method == "DELETE" || req.url ~ "^/(publications|callback|a|login|logout|moderations|feeds/moderations.rss|contents/.*/(licensors|roles|permissions))") {
             set req.backend = rewrite_publish;
             return (pass);
         }
@@ -209,7 +211,7 @@ sub vcl_recv {
         elsif (req.url ~ "_escaped_fragment_=" || req.url ~ "^/$" || req.url ~ "^/opensearch\.xml" || req.url ~ "^/search" || req.url ~ "^/contents$" || req.url ~ "^/(contents|data|exports|styles|fonts|bower_components|node_modules|images|scripts)/" || req.url ~ "^/(about|about-us|people|contents|donate|tos)"|| req.url ~ "^/(login|logout|workspace|callback|users|publish)") {
             set req.backend = rewrite_webview;
 
-            if ( req.request == "POST" || req.request == "PUT" || req.request == "DELETE" || req.url ~ "^/users" || req.url ~ "@draft"){
+            if ( req.method == "POST" || req.method == "PUT" || req.method == "DELETE" || req.url ~ "^/users" || req.url ~ "@draft"){
                 return (pass);
             }
         }
@@ -250,7 +252,7 @@ sub vcl_recv {
 	    error 750 "Moved Permanently" ;
     }
     
-    if (req.request == "PURGE") {
+    if (req.method == "PURGE") {
         if (!client.ip ~ purge) {
             error 405 client.ip;
         }
@@ -259,7 +261,7 @@ sub vcl_recv {
         std.log("purge url: " + req.url);
         error 200 "Purged";
     }
-   if (req.request == "PURGE_REGEXP") {
+   if (req.method == "PURGE_REGEXP") {
         if (!client.ip ~ purge) {
                 error 405 "Not allowed.";
         }
@@ -268,7 +270,7 @@ sub vcl_recv {
         error 200 "Purged";
     }
 
-    if (req.request != "GET" && req.request != "HEAD") {
+    if (req.method != "GET" && req.method != "HEAD") {
         /* We only deal with GET and HEAD by default */
         return(pass);
     }
@@ -299,7 +301,7 @@ sub vcl_hit {
     if (obj.ttl <= 0s) {
         return(pass);
     }
-    if (req.request == "PURGE") {
+    if (req.method == "PURGE") {
         set obj.ttl = 0s;
         error 200 "Purged";
     }
@@ -318,13 +320,13 @@ sub vcl_hit {
 }
 
 sub vcl_miss {
-    if (req.request == "PURGE") {
+    if (req.method == "PURGE") {
         error 404 "Not in cache";
     }
 
 }
 
-sub vcl_fetch {
+sub vcl_backend_response {
     if (beresp.status >= 500) {
         set beresp.ttl = 0s;
     }
@@ -426,7 +428,7 @@ sub vcl_fetch {
     return(deliver);
 }
 
-sub vcl_error {
+sub vcl_backend_error {
     if (obj.status == 750) {
         set obj.http.Location = "http://" + regsub(req.http.host,"^[^:]*","cnx.org") + req.url;
         set obj.status = 301;
