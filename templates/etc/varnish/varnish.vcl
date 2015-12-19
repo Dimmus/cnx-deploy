@@ -330,14 +330,14 @@ sub vcl_backend_response {
     if (beresp.status >= 500) {
         set beresp.ttl = 0s;
     }
-    if (req.http.X-My-Header ) {
-        set beresp.http.X-My-Header = req.http.X-My-Header;
+    if (bereq.http.X-My-Header ) {
+        set beresp.http.X-My-Header = bereq.http.X-My-Header;
     }
-    if (beresp.status == 404 && req.url ~ "^/files/(m[0-9]+)-([0-9.])+\.pdf") {
+    if (beresp.status == 404 && bereq.url ~ "^/files/(m[0-9]+)-([0-9.])+\.pdf") {
 	return (restart);
     }
     if (beresp.status >= 300) {
-        if (req.url !~ "/content/") {
+        if (bereq.url !~ "/content/") {
             set beresp.http.X-Varnish-Action = "FETCH (pass - status > 300, not content)";
             set beresp.uncacheable = true;
             return(deliver);
@@ -356,32 +356,32 @@ sub vcl_backend_response {
         set beresp.uncacheable = true;
         return(deliver);
     }
-    if (req.http.Authorization && !beresp.http.Cache-Control ~ "public") {
+    if (bereq.http.Authorization && !beresp.http.Cache-Control ~ "public") {
         set beresp.http.X-Varnish-Action = "FETCH (pass - authorized and no public cache control)";
         set beresp.uncacheable = true;
         return(deliver);
     }
-    if (req.http.X-Anonymous && !beresp.http.Cache-Control) {
+    if (bereq.http.X-Anonymous && !beresp.http.Cache-Control) {
         set beresp.ttl = 600s;
         set beresp.http.X-Varnish-Action = "FETCH (override - backend not setting cache control)";
     }
 
-    if (req.http.host  ~ "^{{ arclishing_domain }}") {
-        if (req.url ~ "^/contents/") {
+    if (bereq.http.host  ~ "^{{ arclishing_domain }}") {
+        if (bereq.url ~ "^/contents/") {
             set beresp.ttl = 3600s;
             set beresp.http.X-Varnish-Action = "FETCH (override - archive contents)";
         }
-        if (req.url ~ "^/extras") {
+        if (bereq.url ~ "^/extras") {
             set beresp.ttl = 600s;
             set beresp.http.X-Varnish-Action = "FETCH (override - archive extras)";
         }
     }
-    if (req.url ~ "^/contents/") {
+    if (bereq.url ~ "^/contents/") {
         set beresp.ttl = 7d;
         set beresp.http.X-Varnish-Action = "FETCH (override - archive contents)";
     }
 
-    if (req.url ~ "^/resources") {
+    if (bereq.url ~ "^/resources") {
         set beresp.ttl = 30d;
         set beresp.http.X-Varnish-Action = "FETCH (override - resources)";
     }
@@ -404,28 +404,28 @@ sub vcl_backend_response {
         set beresp.http.X-FACTOR-TTL = "ttl: " + beresp.ttl;
     }
 
-    if (req.url ~ "content/OAI\?verb=List(Identifier|Record)s&metadataPrefix=[^&]*$") {
+    if (bereq.url ~ "content/OAI\?verb=List(Identifier|Record)s&metadataPrefix=[^&]*$") {
         set beresp.ttl = 7d; 
         set beresp.http.X-My-Header = "OAI";
     }
-    if (req.url ~ "content/randomContent") {
+    if (bereq.url ~ "content/randomContent") {
         set beresp.uncacheable = true;
         return(deliver);
     }
-    if (req.url ~ "content/[^/]*/[0-9.]*/(\?format=)?pdf$") {
+    if (bereq.url ~ "content/[^/]*/[0-9.]*/(\?format=)?pdf$") {
         set beresp.ttl = 7d; 
         set beresp.http.X-My-Header = "VersionedPDF";
     }
-    if (req.url ~ "content/[^/]*/latest/(\?format=)?pdf$") {
+    if (bereq.url ~ "content/[^/]*/latest/(\?format=)?pdf$") {
         set beresp.http.X-My-Header = "LatestPDF";
         set beresp.uncacheable = true;
         return(deliver);
     }
-    if (req.url ~ "content/[^/]*/[0-9.]*/offline$") {
+    if (bereq.url ~ "content/[^/]*/[0-9.]*/offline$") {
         set beresp.ttl = 90d; 
         set beresp.http.X-My-Header = "VersionedOfflineZip";
     }
-    if (req.url ~ "content/[^/]*/[0-9.]*/complete$") {
+    if (bereq.url ~ "content/[^/]*/[0-9.]*/complete$") {
         set beresp.ttl = 90d; 
         set beresp.http.X-My-Header = "VersionedCompleteZip";
     }
