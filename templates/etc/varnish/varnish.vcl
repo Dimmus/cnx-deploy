@@ -313,7 +313,7 @@ sub vcl_hit {
         # Note, this causes the previously cached object will remain
         # until its ttl has expired.
         set req.hash_always_miss = true;
-        return(retry);
+        return(restart);
     }
     if (req.http.Cache-Control ~ "no-cache") {
         # like msnbot that send no-cache with every request.
@@ -323,7 +323,7 @@ sub vcl_hit {
             # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#backend-restarts-are-now-retry
             # return (restart);
 
-            return(retry);
+            return(restart);
         } 
     }
 }
