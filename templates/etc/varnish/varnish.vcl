@@ -257,25 +257,20 @@ sub vcl_recv {
         return (synth(750, "Moved Permanently"));
     }
     
-    # FIXME Probably need https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#invalidation-with-purge
     if (req.method == "PURGE") {
         if (!client.ip ~ purge) {
             return (synth(405, client.ip));
         }
-        set req.url = req.url + "$";
-        ban_url(req.url);
-        std.log("purge url: " + req.url);
-        return (synth(200, "Purged"));
+        ban("req.url ~ " + req.url + "$");
+        return (synth(200, "Ban added"));
     }
    if (req.method == "PURGE_REGEXP") {
         if (!client.ip ~ purge) {
             return (synth(405, "Not allowed."));
         }
-        ban_url(req.url);
-        std.log("purge regexp: " + req.url);
-        return (synth(200, "Purged"));
+        ban("req.url ~ " + req.url);
+        return (synth(200, "Regexp ban added"));
     }
-    # /FIXME
 
     if (req.method != "GET" && req.method != "HEAD") {
         /* We only deal with GET and HEAD by default */
