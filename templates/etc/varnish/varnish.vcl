@@ -117,19 +117,19 @@ sub vcl_recv {
 
         elsif (req.url ~ "^/specials") {
             set req.backend = backend_2;
-            return (lookup);
+            return (hash);
         }
         else {
 
         set req.backend = rewrite_archive;
-        return (lookup);
+        return (hash);
         }
     }
 
     # resource images
     if (req.url ~ "^/resources/") {
         set req.backend = rewrite_resources;
-        return (lookup);
+        return (hash);
     }
 
 
@@ -155,15 +155,15 @@ sub vcl_recv {
         }
         elsif (req.restarts == 0  && req.url ~ "^/content/.*/enqueue") {
             set req.backend = backend_0;
-            return(lookup);
+            return(hash);
         }
         elsif (req.restarts == 0  && req.url ~ "^/content/col.*/?\?format=rdf") {
             set req.backend = backend_0;
-            return(lookup);
+            return(hash);
         }
         elsif (req.restarts == 0  && req.url ~ "^/content/.*/module_export_template") {
             set req.backend = backend_0;
-            return(lookup);
+            return(hash);
         }
         elsif (req.restarts == 0  && req.url ~ "^/content/(m[0-9]+)/([0-9.]+)/.*format=pdf$") {
             set req.backend = backend_2;
@@ -175,7 +175,7 @@ sub vcl_recv {
         }
         elsif (req.url ~ "^/content/((col|m)[0-9]+)/latest/(pdf|epub)$") {
             set req.backend = backend_0;
-            return(lookup);
+            return(hash);
         }
         elsif (req.url ~ "^/content/((col|m)[0-9]+)/([0-9.]+)/(pdf|epub)$") {
             set req.backend = backend_2;
@@ -291,7 +291,7 @@ sub vcl_recv {
 
     call normalize_accept_encoding;
     call annotate_request;
-    return(lookup);
+    return(hash);
 }
 
 sub vcl_pipe {
@@ -470,7 +470,7 @@ sub vcl_hash {
     if (req.http.Accept ~ "application/xhtml\+xml" && req.url ~ "^/contents/") {
         hash_data("application/xhtml+xml");
     }
-    return (hash);
+    return (lookup);
 }
 
 ##########################
