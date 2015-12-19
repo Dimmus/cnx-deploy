@@ -303,18 +303,18 @@ sub vcl_hit {
     if (obj.ttl <= 0s) {
         return(pass);
     }
-    if (req.http.X-Force-Refresh == "refresh") {
-        # Allow client refresh via magic header
-        # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#obj-is-now-read-only
-        # set obj.ttl = 0s;
-        # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#backend-restarts-are-now-retry
-        # return (restart);
+    # if (req.http.X-Force-Refresh == "refresh") {
+    #     # Allow client refresh via magic header
+    #     # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#obj-is-now-read-only
+    #     # set obj.ttl = 0s;
+    #     # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#backend-restarts-are-now-retry
+    #     # return (restart);
 
-        # Note, this causes the previously cached object will remain
-        # until its ttl has expired.
-        set req.hash_always_miss = true;
-        return(restart);
-    }
+    #     # Note, this causes the previously cached object will remain
+    #     # until its ttl has expired.
+    #     set req.hash_always_miss = true;
+    #     return(restart);
+    # }
     if (req.http.Cache-Control ~ "no-cache") {
         # like msnbot that send no-cache with every request.
         if (client.ip ~ nocache) {
