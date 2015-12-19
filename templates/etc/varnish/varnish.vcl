@@ -304,17 +304,20 @@ sub vcl_hit {
         return(pass);
     }
     if (req.method == "PURGE") {
+        # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#obj-is-now-read-only
         set obj.ttl = 0s;
         return (synth(200, "Purged"));
     }
     if (req.http.X-Force-Refresh == "refresh") {
         # Allow client refresh via magic header
+        # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#obj-is-now-read-only
         set obj.ttl = 0s;
         return (restart);
     }
     if (req.http.Cache-Control ~ "no-cache") {
         # like msnbot that send no-cache with every request.
         if (client.ip ~ nocache) {
+            # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#obj-is-now-read-only
             set obj.ttl = 0s;
             return (restart);
         } 
