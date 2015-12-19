@@ -446,11 +446,11 @@ sub vcl_backend_response {
 
 sub vcl_backend_error {
     if (beresp.status == 750) {
-        set beresp.http.Location = "http://" + regsub(req.http.host,"^[^:]*","cnx.org") + req.url;
+        set beresp.http.Location = "http://" + regsub(bereq.http.host, "^[^:]*", "cnx.org") + bereq.url;
         set beresp.status = 301;
         return(deliver);
     } elsif (beresp.status == 700) {
-        set beresp.http.Location = req.http.host + regsub(req.url,"//$","/");
+        set beresp.http.Location = bereq.http.host + regsub(bereq.url, "//$", "/");
         set beresp.status = 301;
         return(deliver);
     }
