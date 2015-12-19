@@ -1,19 +1,21 @@
 vcl 4.0;
 
+import std;
+
 # This configuration uses inline C, so you must run the program with
 # the include C parameter: -r vcc_allow_inline_c
 
 # This is a basic VCL configuration file for varnish.  See the vcl(7)
 # man page for details on VCL syntax and semantics.
-C{
-        #include <string.h>
-        #include <stdlib.h>
-        #include <time.h>
+# C{
+#         #include <string.h>
+#         #include <stdlib.h>
+#         #include <time.h>
 
-        void TIM_format(double t, char *p);
-        double TIM_real(void);
-        time_t TIM_parse(const char *p);
-}C
+#         void TIM_format(double t, char *p);
+#         double TIM_real(void);
+#         time_t TIM_parse(const char *p);
+# }C
 
 # TODO restore blocked IP address list, but this needs to be part of configuration.
 acl block {
@@ -90,7 +92,6 @@ acl nocache {
     "10.0.0.0"/8;
 }
 
-import std;
 
 sub vcl_recv {
     if (req.url == "/join_form") {
@@ -398,19 +399,25 @@ sub vcl_backend_response {
 
     # Default based on %age of Last-Modified, like squid
     if (!beresp.http.Cache-Control && !beresp.http.Expires && !beresp.http.X-Varnish-Action) {
-        C{
-            double factor = 0.2;
-            double age = 0;
-            char *lastmod = 0;
-            time_t lmod;
+        # FIXME Is the following a valid replacement for this inline C?
+        #       Probably not...
+        # C{
+        #     double factor = 0.2;
+        #     double age = 0;
+        #     char *lastmod = 0;
+        #     time_t lmod;
             
-            lastmod = VRT_GetHdr(sp, HDR_BERESP, "\016Last-Modified:");
-            if (lastmod) {
-                lmod =  TIM_parse(lastmod);
-                age = TIM_real() - lmod;
-                VRT_l_beresp_ttl(sp, age*factor);  
-            } 
-         }C
+        #     lastmod = VRT_GetHdr(sp, HDR_BERESP, "\016Last-Modified:");
+        #     if (lastmod) {
+        #         lmod =  TIM_parse(lastmod);
+        #         age = TIM_real() - lmod;
+        #         VRT_l_beresp_ttl(sp, age*factor);
+        #     }
+        #  }C
+
+        # This is the attempted replacement, but it fails to compile.
+        # set beresp.ttl = std.time(beresp.http.last-modified, now);
+        # /FIXME
         set beresp.http.X-FACTOR-TTL = "ttl: " + beresp.ttl;
     }
 
