@@ -350,7 +350,7 @@ sub vcl_backend_response {
     }
     if (beresp.status == 404 && bereq.url ~ "^/files/(m[0-9]+)-([0-9.])+\.pdf") {
         # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#backend-restarts-are-now-retry
-        return (restart);
+        return(retry);
     }
     if (beresp.status >= 300) {
         if (bereq.url !~ "/content/") {
