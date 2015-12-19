@@ -339,23 +339,27 @@ sub vcl_backend_response {
     if (beresp.status >= 300) {
         if (req.url !~ "/content/") {
             set beresp.http.X-Varnish-Action = "FETCH (pass - status > 300, not content)";
-            return(hit_for_pass);
+            set beresp.uncacheable = true;
+            return(deliver);
         }
     }
 
     set beresp.grace = 120s;
     if (beresp.ttl <= 0s) {
         set beresp.http.X-Varnish-Action = "FETCH (pass - not cacheable)";
-        return(hit_for_pass);
+        set beresp.uncacheable = true;
+        return(deliver);
     }
 
     if (!beresp.http.Cache-Control ~ "s-maxage=[1-9]" && beresp.http.Cache-Control ~ "(private|no-cache|no-store)") {
         set beresp.http.X-Varnish-Action = "FETCH (pass - response sets private/no-cache/no-store token)";
-        return(hit_for_pass);
+        set beresp.uncacheable = true;
+        return(deliver);
     }
     if (req.http.Authorization && !beresp.http.Cache-Control ~ "public") {
         set beresp.http.X-Varnish-Action = "FETCH (pass - authorized and no public cache control)";
-        return(hit_for_pass);
+        set beresp.uncacheable = true;
+        return(deliver);
     }
     if (req.http.X-Anonymous && !beresp.http.Cache-Control) {
         set beresp.ttl = 600s;
@@ -405,7 +409,8 @@ sub vcl_backend_response {
         set beresp.http.X-My-Header = "OAI";
     }
     if (req.url ~ "content/randomContent") {
-        return(hit_for_pass);
+        set beresp.uncacheable = true;
+        return(deliver);
     }
     if (req.url ~ "content/[^/]*/[0-9.]*/(\?format=)?pdf$") {
         set beresp.ttl = 7d; 
@@ -413,7 +418,8 @@ sub vcl_backend_response {
     }
     if (req.url ~ "content/[^/]*/latest/(\?format=)?pdf$") {
         set beresp.http.X-My-Header = "LatestPDF";
-        return(hit_for_pass);
+        set beresp.uncacheable = true;
+        return(deliver);
     }
     if (req.url ~ "content/[^/]*/[0-9.]*/offline$") {
         set beresp.ttl = 90d; 
