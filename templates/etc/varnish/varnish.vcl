@@ -148,7 +148,9 @@ sub vcl_recv {
         return (synth(403, "Access denied"));
     }
 
-    set req.grace = 120s;
+    # FIXME req.grace cannot be used here, see also
+    #       https://www.varnish-cache.org/docs/4.0/users-guide/vcl-grace.html
+    # set req.grace = 120s;
     if (req.http.host ~ "^{{ frontend_domain }}(:[0-9]+)?$") {
 
         /* doing the static file dance */
