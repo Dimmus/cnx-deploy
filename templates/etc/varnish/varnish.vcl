@@ -312,6 +312,7 @@ sub vcl_hit {
         # Allow client refresh via magic header
         # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#obj-is-now-read-only
         set obj.ttl = 0s;
+        # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#backend-restarts-are-now-retry
         return (restart);
     }
     if (req.http.Cache-Control ~ "no-cache") {
@@ -319,6 +320,7 @@ sub vcl_hit {
         if (client.ip ~ nocache) {
             # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#obj-is-now-read-only
             set obj.ttl = 0s;
+            # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#backend-restarts-are-now-retry
             return (restart);
         } 
     }
@@ -339,7 +341,8 @@ sub vcl_backend_response {
         set beresp.http.X-My-Header = bereq.http.X-My-Header;
     }
     if (beresp.status == 404 && bereq.url ~ "^/files/(m[0-9]+)-([0-9.])+\.pdf") {
-	return (restart);
+        # FIXME https://www.varnish-cache.org/docs/4.0/whats-new/upgrading.html#backend-restarts-are-now-retry
+        return (restart);
     }
     if (beresp.status >= 300) {
         if (bereq.url !~ "/content/") {
