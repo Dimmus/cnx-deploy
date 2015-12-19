@@ -107,31 +107,31 @@ sub vcl_recv {
 
     # cnx rewrite archive
     if (req.url ~ "^/a/") {
-            set req.backend = rewrite_publish;
+            set req.backend_hint = rewrite_publish;
             return (pass);
         }
 
     # cnx rewrite archive  - specials served from nginx statically
     if (req.http.host ~ "^{{ arclishing_domain }}" || req.url ~ "^/sitemap.xml") {
         if ( req.method == "POST" || req.method == "PUT" || req.method == "DELETE" || req.url ~ "^/(publications|callback|a|login|logout|moderations|feeds/moderations.rss|contents/.*/(licensors|roles|permissions))") {
-            set req.backend = rewrite_publish;
+            set req.backend_hint = rewrite_publish;
             return (pass);
         }
 
         elsif (req.url ~ "^/specials") {
-            set req.backend = backend_2;
+            set req.backend_hint = backend_2;
             return (hash);
         }
         else {
 
-        set req.backend = rewrite_archive;
+        set req.backend_hint = rewrite_archive;
         return (hash);
         }
     }
 
     # resource images
     if (req.url ~ "^/resources/") {
-        set req.backend = rewrite_resources;
+        set req.backend_hint = rewrite_resources;
         return (hash);
     }
 
@@ -153,66 +153,66 @@ sub vcl_recv {
 
         /* doing the static file dance */
         if (req.url ~ "^/pdfs") {
-            set req.backend = backend_2;
+            set req.backend_hint = backend_2;
             set req.url = regsub(req.url, "^/pdfs", "/files");
         }
         elsif (req.restarts == 0  && req.url ~ "^/content/.*/enqueue") {
-            set req.backend = backend_0;
+            set req.backend_hint = backend_0;
             return(hash);
         }
         elsif (req.restarts == 0  && req.url ~ "^/content/col.*/?\?format=rdf") {
-            set req.backend = backend_0;
+            set req.backend_hint = backend_0;
             return(hash);
         }
         elsif (req.restarts == 0  && req.url ~ "^/content/.*/module_export_template") {
-            set req.backend = backend_0;
+            set req.backend_hint = backend_0;
             return(hash);
         }
         elsif (req.restarts == 0  && req.url ~ "^/content/(m[0-9]+)/([0-9.]+)/.*format=pdf$") {
-            set req.backend = backend_2;
+            set req.backend_hint = backend_2;
             set req.url = regsub(req.url, "^/content/(m[0-9]+)/([0-9.]+)/.*format=pdf", "/files/\1-\2.pdf");
         }
         elsif (req.restarts == 1  && req.url ~ "^/files/(m[0-9]+)-([0-9.]+)\.pdf") {
-            set req.backend = backend_0;
+            set req.backend_hint = backend_0;
             set req.url = regsub(req.url, "^/files/(m[0-9]+)-([0-9.]+)\.pdf", "/content/\1/\2/?format=pdf");
         }
         elsif (req.url ~ "^/content/((col|m)[0-9]+)/latest/(pdf|epub)$") {
-            set req.backend = backend_0;
+            set req.backend_hint = backend_0;
             return(hash);
         }
         elsif (req.url ~ "^/content/((col|m)[0-9]+)/([0-9.]+)/(pdf|epub)$") {
-            set req.backend = backend_2;
+            set req.backend_hint = backend_2;
             set req.url = regsub(req.url, "^/content/((col|m)[0-9]+)/([0-9.]+)/.*(pdf|epub)", "/files/\1-\3.\4");
         }
         elsif (req.url ~ "^/content/((col|m)[0-9]+)/([0-9.]+)/(complete|offline)$") {
-            set req.backend = backend_2;
+            set req.backend_hint = backend_2;
             set req.url = regsub(req.url, "^/content/((col|m)[0-9]+)/([0-9.]+)/(complete|offline)", "/files/\1-\3.\4.zip");
         }
         elsif (req.url ~ "^/content/(col[0-9]+)/([0-9.]+)/source$") {
-            set req.backend = backend_2;
+            set req.backend_hint = backend_2;
             set req.url = regsub(req.url, "^/content/(col[0-9]+)/([0-9.]+)/source", "/files/\1-\2.xml");
         }
         elsif (req.url ~ "^/content/((col|m)[0-9]+)/(([0-9.]+)|latest)/?") {
-            set req.backend = rewrite_archive;
+            set req.backend_hint = rewrite_archive;
         }
         elsif (req.url ~ "^/content/((col|m)[0-9]+)/(([0-9.]+)|latest)/\?collection=col[0-9]*") {
-            set req.backend = rewrite_archive;
+            set req.backend_hint = rewrite_archive;
         }
         // special cases for legacy
         elsif (req.url ~ "^/images/(advice\.png|example\.png|missing\.eps\.metadata|thick-left-arrow\.png|annot\.png|explanation\.png|question\.png|change\.png|magnify-glass-cnx\.png|rhaptos_powered\.png|comment\.png|missing\.eps|seealso\.png)"
                || req.url ~ "^/scripts/(fileSizeUnits|getUser|selectAllNoneInverse)") {
-            set req.backend = backend_0;
+            set req.backend_hint = backend_0;
         }
         elseif ( req.url ~ "^/aboutus/" ) {
             /*  avoid multiple rewrites on restart */
             if (req.url !~ "VirtualHostBase" ) {
                 set req.url = "/VirtualHostBase/https/legacy.cnx.org:443/plone/VirtualHostRoot" + req.url;
             }
-            set req.backend = backend_0;
+            set req.backend_hint = backend_0;
         }
         // all rewrite webview
         elsif (req.url ~ "_escaped_fragment_=" || req.url ~ "^/$" || req.url ~ "^/opensearch\.xml" || req.url ~ "^/search" || req.url ~ "^/contents$" || req.url ~ "^/(contents|data|exports|styles|fonts|bower_components|node_modules|images|scripts)/" || req.url ~ "^/(about|about-us|people|contents|donate|tos)"|| req.url ~ "^/(login|logout|workspace|callback|users|publish)") {
-            set req.backend = rewrite_webview;
+            set req.backend_hint = rewrite_webview;
 
             if ( req.method == "POST" || req.method == "PUT" || req.method == "DELETE" || req.url ~ "^/users" || req.url ~ "@draft"){
                 return (pass);
@@ -221,7 +221,7 @@ sub vcl_recv {
         // everything else (including 404)
         else {
             set req.http.X-My-Header = "Fallthrough";
-            set req.backend = backend_0;
+            set req.backend_hint = backend_0;
             /*  avoid multiple rewrites on restart */
             if (req.url !~ "VirtualHostBase" ) {
                 if  ( req.http.X-Secure ) {
@@ -234,7 +234,7 @@ sub vcl_recv {
         }
     }
     elsif (req.http.host ~ "^passthru") {
-        set req.backend = backend_0;
+        set req.backend_hint = backend_0;
     }
     elsif (req.http.host ~ "^siyavula.cnx.org") {
         set req.url = "/VirtualHostBase/http/siyavula.cnx.org:80/plone/VirtualHostRoot" + req.url;
@@ -249,7 +249,7 @@ sub vcl_recv {
                 set req.url = "/VirtualHostBase/http/legacy.cnx.org:80/plone/VirtualHostRoot" + req.url;
             }
         }
-        set req.backend = backend_0;
+        set req.backend_hint = backend_0;
     }
     else {
         return (synth(750, "Moved Permanently"));
