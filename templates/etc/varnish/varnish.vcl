@@ -1,5 +1,8 @@
 vcl 4.0;
 
+# This configuration uses inline C, so you must run the program with
+# the include C parameter: -r vcc_allow_inline_c
+
 # This is a basic VCL configuration file for varnish.  See the vcl(7)
 # man page for details on VCL syntax and semantics.
 C{
