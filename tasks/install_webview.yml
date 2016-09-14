@@ -7,10 +7,20 @@
 
 - name: copy dist build to source
   become: yes
-  copy:
+  synchronize:
     src: "{{ local_source_dir }}/webview/dist"
     dest: "{{ source_dir }}/webview"
+    archive: no
+    recursive: yes
+    checksum: yes
+
+- name: change webview dist build owner
+  become: yes
+  file:
+    path: "{{ source_dir }}/webview/dist"
+    recurse: yes
     owner: www-data
+    state: directory
 
 # +++
 # Configure
