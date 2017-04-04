@@ -1,0 +1,32 @@
+- name: add host to Zabbix monitoring
+  local_action:
+    module: zabbix_host
+    server_url: http://monitor.openstax.org
+    login_user: {{ zabbix_user }}
+    login_password: {{ zabbix_password }}
+    host_name: {{ inventory_hostname }}
+    visible_name: {{ inventory_hostname }}
+    host_groups:
+      - CNX Servers
+    link_templates:
+      - 
+    status: enabled
+    state: present
+    inventory_mode: automatic
+    interfaces:
+      - type: 1
+        main: 1
+        useip: 1
+        ip: {{ hostvars[host].ansible_default_ipv4.address }}
+        dns: ""
+        port: 10051
+
+- name: add Zabbix apt repository
+  apt:
+    deb: "deb http://repo.zabbix.com/zabbix/3.2/ubuntu/pool/main/z/zabbix-release/zabbix-release_3.2-1+xenial_all.deb"
+
+- name: install Zabbix agent
+  apt:
+    name: zabbix-agent
+    state: present
+  notify: start zabbix-agent
