@@ -17,6 +17,8 @@
     - libxml2-dev
     - libxslt-dev
     - zlib1g-dev
+    # needed for pip install archive
+    - git
 
 - name: install postgres client
   become: yes
