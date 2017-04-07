@@ -13,9 +13,18 @@ authoring_db_password: "{{ vault_authoring_db_password }}"
 authoring_db_host: des00.cnx.org
 authoring_db_port: 5432
 
+# FIXME Not really yaml'ish to use space separated values...
+# Note, don't confuse the usage of 'hosts' here with ansible 'hosts'.
+# 'hosts' is a space separated value containing hostnames or ip addresses
+# where a memcached instance is running.
 memcached_hosts: localhost
 
 varnish_port: 8990
+
+archive_host: des00.cnx.org
+publishing_host: des00.cnx.org
+authoring_host: des00.cnx.org
+zclient_base_port: 8280
 
 zope_domain: legacy-des.cnx.org
 arclishing_domain: archive-des.cnx.org
