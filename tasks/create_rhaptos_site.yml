@@ -12,7 +12,7 @@
   vars:
     db_user: "{{ archive_db_user }}"
     db_password: "{{ archive_db_password }}"
-    role_attr_flags: "{{ 't' in archive_db_exists.stdout and 'CREATEDB,NOSUPERUSER' or 'SUPERUSER' }}"
+    role_attr_flags: 'CREATEDB,NOSUPERUSER'
   include: tasks/create_db_user.yml
 
 - name: create empty temporary rhaptos database
